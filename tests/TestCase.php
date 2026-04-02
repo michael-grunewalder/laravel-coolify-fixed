@@ -2,15 +2,17 @@
 
 namespace Stumason\Coolify\Tests;
 
+use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Stumason\Coolify\CoolifyServiceProvider;
+use Stumason\Coolify\Facades\Coolify;
 
 abstract class TestCase extends BaseTestCase
 {
     /**
      * Get package providers.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param  Application  $app
      * @return array<int, class-string>
      */
     protected function getPackageProviders($app): array
@@ -23,20 +25,20 @@ abstract class TestCase extends BaseTestCase
     /**
      * Get package aliases.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param  Application  $app
      * @return array<string, class-string>
      */
     protected function getPackageAliases($app): array
     {
         return [
-            'Coolify' => \Stumason\Coolify\Facades\Coolify::class,
+            'Coolify' => Coolify::class,
         ];
     }
 
     /**
      * Define environment setup.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param  Application  $app
      */
     protected function defineEnvironment($app): void
     {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Stumason\Coolify\Docker;
 
 use Illuminate\Support\Facades\File;
+use Spatie\Browsershot\Browsershot;
 use Stumason\Coolify\Detectors\HorizonDetector;
 use Stumason\Coolify\Detectors\PackageDetector;
 use Stumason\Coolify\Detectors\ReverbDetector;
@@ -825,7 +826,7 @@ BASH;
             return $this->hasBrowsershot;
         }
 
-        $this->hasBrowsershot = class_exists(\Spatie\Browsershot\Browsershot::class);
+        $this->hasBrowsershot = class_exists(Browsershot::class);
 
         return $this->hasBrowsershot;
     }

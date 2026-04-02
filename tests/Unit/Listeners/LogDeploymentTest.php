@@ -32,7 +32,7 @@ describe('LogDeployment', function () {
 
         Log::shouldReceive('info')
             ->once()
-            ->with('Coolify deployment started', \Mockery::type('array'));
+            ->with('Coolify deployment started', Mockery::type('array'));
 
         $event = new DeploymentStarted($this->application, $this->deployment);
 
@@ -47,7 +47,7 @@ describe('LogDeployment', function () {
 
         Log::shouldReceive('info')
             ->once()
-            ->with('Coolify deployment succeeded', \Mockery::type('array'));
+            ->with('Coolify deployment succeeded', Mockery::type('array'));
 
         $event = new DeploymentSucceeded($this->application, $this->deployment);
 
@@ -64,7 +64,7 @@ describe('LogDeployment', function () {
 
         Log::shouldReceive('error')
             ->once()
-            ->with('Coolify deployment failed', \Mockery::type('array'));
+            ->with('Coolify deployment failed', Mockery::type('array'));
 
         $event = new DeploymentFailed($this->application, $this->deployment);
 

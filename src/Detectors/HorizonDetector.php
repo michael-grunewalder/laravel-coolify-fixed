@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Stumason\Coolify\Detectors;
 
+use Laravel\Horizon\Horizon;
+
 class HorizonDetector implements PackageDetector
 {
     public function name(): string
@@ -13,7 +15,7 @@ class HorizonDetector implements PackageDetector
 
     public function isInstalled(): bool
     {
-        return class_exists(\Laravel\Horizon\Horizon::class);
+        return class_exists(Horizon::class);
     }
 
     public function getSupervisorConfig(): ?string

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Stumason\Coolify\Detectors;
 
+use Laravel\Reverb\ReverbServiceProvider;
+
 class ReverbDetector implements PackageDetector
 {
     public function name(): string
@@ -13,7 +15,7 @@ class ReverbDetector implements PackageDetector
 
     public function isInstalled(): bool
     {
-        return class_exists(\Laravel\Reverb\ReverbServiceProvider::class);
+        return class_exists(ReverbServiceProvider::class);
     }
 
     public function getSupervisorConfig(): ?string

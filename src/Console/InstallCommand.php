@@ -7,6 +7,7 @@ namespace Stumason\Coolify\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Stumason\Coolify\CoolifyClient;
 use Stumason\Coolify\Docker\DockerGenerator;
 use Symfony\Component\Console\Attribute\AsCommand;
 
@@ -251,7 +252,7 @@ class InstallCommand extends Command
     {
         $this->components->task('Test Coolify connection', function () {
             try {
-                $client = app(\Stumason\Coolify\CoolifyClient::class);
+                $client = app(CoolifyClient::class);
                 $client->get('/version');
 
                 return true;
