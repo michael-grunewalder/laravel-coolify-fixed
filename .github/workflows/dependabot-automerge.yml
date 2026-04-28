@@ -23,41 +23,74 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Wait for PHP 8.3 tests
+      - name: Wait for PHP 8.3 / Laravel 12 tests
         uses: fountainhead/action-wait-for-check@v1.2.0
-        id: wait-for-php83
+        id: wait-for-php83-l12
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "test (8.3, 12.*)"
+          checkName: "PHP 8.3 / Laravel 12.*"
           ref: ${{ github.event.pull_request.head.sha }}
           timeoutSeconds: 600
           intervalSeconds: 30
 
-      - name: Wait for PHP 8.4 tests
+      - name: Wait for PHP 8.3 / Laravel 13 tests
         uses: fountainhead/action-wait-for-check@v1.2.0
-        id: wait-for-php84
+        id: wait-for-php83-l13
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "test (8.4, 12.*)"
+          checkName: "PHP 8.3 / Laravel 13.*"
           ref: ${{ github.event.pull_request.head.sha }}
           timeoutSeconds: 600
           intervalSeconds: 30
 
-      - name: Wait for lint
+      - name: Wait for PHP 8.4 / Laravel 12 tests
         uses: fountainhead/action-wait-for-check@v1.2.0
-        id: wait-for-lint
+        id: wait-for-php84-l12
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "lint"
+          checkName: "PHP 8.4 / Laravel 12.*"
+          ref: ${{ github.event.pull_request.head.sha }}
+          timeoutSeconds: 600
+          intervalSeconds: 30
+
+      - name: Wait for PHP 8.4 / Laravel 13 tests
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-for-php84-l13
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "PHP 8.4 / Laravel 13.*"
+          ref: ${{ github.event.pull_request.head.sha }}
+          timeoutSeconds: 600
+          intervalSeconds: 30
+
+      - name: Wait for Pint
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-for-pint
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "PHP Code Style (Pint)"
+          ref: ${{ github.event.pull_request.head.sha }}
+          timeoutSeconds: 600
+          intervalSeconds: 30
+
+      - name: Wait for PHPStan
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-for-phpstan
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "Static Analysis (PHPStan)"
           ref: ${{ github.event.pull_request.head.sha }}
           timeoutSeconds: 600
           intervalSeconds: 30
 
       - name: Auto-merge minor/patch updates
         if: |
-          steps.wait-for-php83.outputs.conclusion == 'success' &&
-          steps.wait-for-php84.outputs.conclusion == 'success' &&
-          steps.wait-for-lint.outputs.conclusion == 'success' &&
+          steps.wait-for-php83-l12.outputs.conclusion == 'success' &&
+          steps.wait-for-php83-l13.outputs.conclusion == 'success' &&
+          steps.wait-for-php84-l12.outputs.conclusion == 'success' &&
+          steps.wait-for-php84-l13.outputs.conclusion == 'success' &&
+          steps.wait-for-pint.outputs.conclusion == 'success' &&
+          steps.wait-for-phpstan.outputs.conclusion == 'success' &&
           (steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch')
         run: gh pr merge --auto --squash "$PR_URL"
         env:
@@ -66,13 +99,15 @@ jobs:
 
       - name: Auto-merge security updates
         if: |
-          steps.wait-for-php83.outputs.conclusion == 'success' &&
-          steps.wait-for-php84.outputs.conclusion == 'success' &&
-          steps.wait-for-lint.outputs.conclusion == 'success' &&
+          steps.wait-for-php83-l12.outputs.conclusion == 'success' &&
+          steps.wait-for-php83-l13.outputs.conclusion == 'success' &&
+          steps.wait-for-php84-l12.outputs.conclusion == 'success' &&
+          steps.wait-for-php84-l13.outputs.conclusion == 'success' &&
+          steps.wait-for-pint.outputs.conclusion == 'success' &&
+          steps.wait-for-phpstan.outputs.conclusion == 'success' &&
           steps.metadata.outputs.dependency-type == 'direct:production' &&
           steps.metadata.outputs.update-type == 'version-update:semver-major'
         run: |
-          # Only auto-merge major security updates
           if [[ "${{ steps.metadata.outputs.ghsa }}" != "" ]]; then
             gh pr merge --auto --squash "$PR_URL"
           fi
