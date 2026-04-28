@@ -63,6 +63,26 @@ jobs:
           timeoutSeconds: 600
           intervalSeconds: 30
 
+      - name: Wait for PHP 8.5 / Laravel 12 tests
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-for-php85-l12
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "PHP 8.5 / Laravel 12.*"
+          ref: ${{ github.event.pull_request.head.sha }}
+          timeoutSeconds: 600
+          intervalSeconds: 30
+
+      - name: Wait for PHP 8.5 / Laravel 13 tests
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-for-php85-l13
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "PHP 8.5 / Laravel 13.*"
+          ref: ${{ github.event.pull_request.head.sha }}
+          timeoutSeconds: 600
+          intervalSeconds: 30
+
       - name: Wait for Pint
         uses: fountainhead/action-wait-for-check@v1.2.0
         id: wait-for-pint
@@ -89,6 +109,8 @@ jobs:
           steps.wait-for-php83-l13.outputs.conclusion == 'success' &&
           steps.wait-for-php84-l12.outputs.conclusion == 'success' &&
           steps.wait-for-php84-l13.outputs.conclusion == 'success' &&
+          steps.wait-for-php85-l12.outputs.conclusion == 'success' &&
+          steps.wait-for-php85-l13.outputs.conclusion == 'success' &&
           steps.wait-for-pint.outputs.conclusion == 'success' &&
           steps.wait-for-phpstan.outputs.conclusion == 'success' &&
           (steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch')
@@ -103,6 +125,8 @@ jobs:
           steps.wait-for-php83-l13.outputs.conclusion == 'success' &&
           steps.wait-for-php84-l12.outputs.conclusion == 'success' &&
           steps.wait-for-php84-l13.outputs.conclusion == 'success' &&
+          steps.wait-for-php85-l12.outputs.conclusion == 'success' &&
+          steps.wait-for-php85-l13.outputs.conclusion == 'success' &&
           steps.wait-for-pint.outputs.conclusion == 'success' &&
           steps.wait-for-phpstan.outputs.conclusion == 'success' &&
           steps.metadata.outputs.dependency-type == 'direct:production' &&
