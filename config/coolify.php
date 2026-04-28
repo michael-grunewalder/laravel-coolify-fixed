@@ -190,7 +190,7 @@ return [
     */
 
     'docker' => [
-        // PHP version for the production image (e.g., '8.3', '8.4')
+        // PHP version for the production image (e.g., '8.3', '8.4', '8.5')
         'php_version' => env('COOLIFY_PHP_VERSION', '8.4'),
 
         // Health check endpoint path

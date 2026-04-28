@@ -50,11 +50,17 @@ jobs:
           - dockerfile: 'Dockerfile.8.4'
             tag: '8.4'
             node: false
+          - dockerfile: 'Dockerfile.8.5'
+            tag: '8.5'
+            node: false
           - dockerfile: 'Dockerfile.8.3-node'
             tag: '8.3-node'
             node: true
           - dockerfile: 'Dockerfile.8.4-node'
             tag: '8.4-node'
+            node: true
+          - dockerfile: 'Dockerfile.8.5-node'
+            tag: '8.5-node'
             node: true
         arch:
           - runner: ubuntu-latest
@@ -112,9 +118,13 @@ jobs:
             node: false
           - tag: '8.4'
             node: false
+          - tag: '8.5'
+            node: false
           - tag: '8.3-node'
             node: true
           - tag: '8.4-node'
+            node: true
+          - tag: '8.5-node'
             node: true
 
     steps:
