@@ -1,5 +1,5 @@
 # =============================================================================
-# Laravel Coolify Base Image - PHP 8.3 + Node.js 20
+# Laravel Coolify Base Image - PHP 8.3 + Node.js 24
 # =============================================================================
 # Pre-built image with all system dependencies, PHP extensions, and Node.js.
 # Using this image reduces deployment time from ~12 minutes to ~2-3 minutes.
@@ -11,7 +11,7 @@ FROM php:8.3-fpm-bookworm
 
 LABEL maintainer="Stu Mason <me@stumason.dev>" \
       org.opencontainers.image.title="Laravel Coolify Base (Node)" \
-      org.opencontainers.image.description="Pre-built PHP 8.3 + Node.js 20 base image for Laravel applications deployed via Coolify" \
+      org.opencontainers.image.description="Pre-built PHP 8.3 + Node.js 24 base image for Laravel applications deployed via Coolify" \
       org.opencontainers.image.source="https://github.com/StuMason/laravel-coolify" \
       org.opencontainers.image.version="8.3-node"
 
@@ -46,12 +46,12 @@ RUN apt-get update \
     && apt-get clean
 
 # =============================================================================
-# Node.js 20 LTS
+# Node.js 24 LTS
 # =============================================================================
-# Installed via NodeSource for the latest LTS version.
+# Installed via NodeSource for the current Active LTS version.
 # Includes npm for package management.
 # =============================================================================
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean \

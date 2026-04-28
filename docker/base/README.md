@@ -8,8 +8,10 @@ Pre-built Docker images with all system dependencies and PHP extensions compiled
 |-------|-----|---------|----------|
 | `ghcr.io/stumason/laravel-coolify-base:8.3` | 8.3 | - | API-only or Blade apps |
 | `ghcr.io/stumason/laravel-coolify-base:8.4` | 8.4 | - | API-only or Blade apps |
-| `ghcr.io/stumason/laravel-coolify-base:8.3-node` | 8.3 | 20 LTS | Full-stack with Vite/Inertia |
-| `ghcr.io/stumason/laravel-coolify-base:8.4-node` | 8.4 | 20 LTS | Full-stack with Vite/Inertia |
+| `ghcr.io/stumason/laravel-coolify-base:8.5` | 8.5 | - | API-only or Blade apps |
+| `ghcr.io/stumason/laravel-coolify-base:8.3-node` | 8.3 | 24 LTS | Full-stack with Vite/Inertia |
+| `ghcr.io/stumason/laravel-coolify-base:8.4-node` | 8.4 | 24 LTS | Full-stack with Vite/Inertia |
+| `ghcr.io/stumason/laravel-coolify-base:8.5-node` | 8.5 | 24 LTS | Full-stack with Vite/Inertia |
 
 ## What's Included
 
@@ -26,7 +28,7 @@ Pre-built Docker images with all system dependencies and PHP extensions compiled
 - **Cache:** redis (via PECL)
 
 ### Node.js (for `-node` variants)
-- Node.js 20 LTS
+- Node.js 24 LTS
 - npm (latest)
 
 ## What's NOT Included

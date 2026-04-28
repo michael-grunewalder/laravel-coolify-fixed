@@ -1,19 +1,19 @@
 # =============================================================================
-# Laravel Coolify Base Image - PHP 8.4 + Node.js 24
+# Laravel Coolify Base Image - PHP 8.5 + Node.js 24
 # =============================================================================
 # Pre-built image with all system dependencies, PHP extensions, and Node.js.
 # Using this image reduces deployment time from ~12 minutes to ~2-3 minutes.
 #
-# Published to: ghcr.io/stumason/laravel-coolify-base:8.4-node
+# Published to: ghcr.io/stumason/laravel-coolify-base:8.5-node
 # =============================================================================
 
-FROM php:8.4-fpm-bookworm
+FROM php:8.5-fpm-bookworm
 
 LABEL maintainer="Stu Mason <me@stumason.dev>" \
       org.opencontainers.image.title="Laravel Coolify Base (Node)" \
-      org.opencontainers.image.description="Pre-built PHP 8.4 + Node.js 24 base image for Laravel applications deployed via Coolify" \
+      org.opencontainers.image.description="Pre-built PHP 8.5 + Node.js 24 base image for Laravel applications deployed via Coolify" \
       org.opencontainers.image.source="https://github.com/StuMason/laravel-coolify" \
-      org.opencontainers.image.version="8.4-node"
+      org.opencontainers.image.version="8.5-node"
 
 # =============================================================================
 # System Dependencies

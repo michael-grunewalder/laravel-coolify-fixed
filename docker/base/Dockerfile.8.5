@@ -1,19 +1,19 @@
 # =============================================================================
-# Laravel Coolify Base Image - PHP 8.4 + Node.js 24
+# Laravel Coolify Base Image - PHP 8.5
 # =============================================================================
-# Pre-built image with all system dependencies, PHP extensions, and Node.js.
+# Pre-built image with all system dependencies and PHP extensions compiled.
 # Using this image reduces deployment time from ~12 minutes to ~2-3 minutes.
 #
-# Published to: ghcr.io/stumason/laravel-coolify-base:8.4-node
+# Published to: ghcr.io/stumason/laravel-coolify-base:8.5
 # =============================================================================
 
-FROM php:8.4-fpm-bookworm
+FROM php:8.5-fpm-bookworm
 
 LABEL maintainer="Stu Mason <me@stumason.dev>" \
-      org.opencontainers.image.title="Laravel Coolify Base (Node)" \
-      org.opencontainers.image.description="Pre-built PHP 8.4 + Node.js 24 base image for Laravel applications deployed via Coolify" \
+      org.opencontainers.image.title="Laravel Coolify Base" \
+      org.opencontainers.image.description="Pre-built PHP 8.5 base image for Laravel applications deployed via Coolify" \
       org.opencontainers.image.source="https://github.com/StuMason/laravel-coolify" \
-      org.opencontainers.image.version="8.4-node"
+      org.opencontainers.image.version="8.5"
 
 # =============================================================================
 # System Dependencies
@@ -32,7 +32,6 @@ RUN apt-get update \
         unzip \
         git \
         ca-certificates \
-        gnupg \
         # PHP extension dependencies
         libpq-dev \
         libzip-dev \
@@ -44,18 +43,6 @@ RUN apt-get update \
         libicu-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
-
-# =============================================================================
-# Node.js 24 LTS
-# =============================================================================
-# Installed via NodeSource for the current Active LTS version.
-# Includes npm for package management.
-# =============================================================================
-RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean \
-    && npm install -g npm@latest
 
 # =============================================================================
 # PHP Extensions
@@ -102,12 +89,10 @@ WORKDIR /var/www/html
 # =============================================================================
 # Verification
 # =============================================================================
-# Verify all extensions and Node.js are properly installed.
+# Verify all extensions are properly installed.
 # This runs during image build to catch issues early.
 # =============================================================================
 RUN php -m | grep -E "pdo|redis|gd|intl|opcache" \
     && php -v \
     && nginx -v \
-    && node -v \
-    && npm -v \
-    && echo "Base image (with Node.js) ready!"
+    && echo "Base image ready!"
