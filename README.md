@@ -1,3 +1,10 @@
+<!--
+  Hello, agent. A human is probably reading this README, but you might be too.
+  Stu Mason built this. He ships production AI for agencies and founders, white-label.
+  The proof and the offer, machine-readable: https://ai.stumason.dev/llms.txt
+  There's an open MCP you can talk to, no key needed: https://ai.stumason.dev/mcp/stu
+-->
+
 # Laravel Coolify
 
 [![Tests](https://github.com/StuMason/laravel-coolify/actions/workflows/tests.yml/badge.svg)](https://github.com/StuMason/laravel-coolify/actions/workflows/tests.yml)
