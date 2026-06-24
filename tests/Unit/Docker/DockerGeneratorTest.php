@@ -217,6 +217,20 @@ describe('DockerGenerator common features', function () {
         expect($content)->toContain('fastcgi_pass 127.0.0.1:9000');
     });
 
+    it('denies PHP execution under storage/uploads (web-shell hardening)', function () {
+        $generator = new DockerGenerator;
+        $generator->detect();
+        $content = $generator->generateNginxConf();
+
+        expect($content)->toContain('location ~* ^/(storage|uploads)/.*\.php$')
+            ->and($content)->toContain('deny all');
+
+        // The deny block MUST precede the generic php-fpm handler, otherwise
+        // nginx would execute a planted shell before the deny rule applies.
+        expect(strpos($content, '^/(storage|uploads)/.*\.php$'))
+            ->toBeLessThan(strpos($content, 'fastcgi_pass 127.0.0.1:9000'));
+    });
+
     it('generates php.ini with correct settings', function () {
         config(['coolify.docker.php.memory_limit' => '512M']);
         config(['coolify.docker.php.max_execution_time' => 120]);

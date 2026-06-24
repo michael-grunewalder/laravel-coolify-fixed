@@ -516,6 +516,15 @@ http {
 
         error_page 404 /index.php;
 
+        # Security: never execute PHP from writable/uploadable paths.
+        # storage/ is symlinked into the web root and is world-writable, so a
+        # dropped *.php there must never reach php-fpm. Matched before the
+        # generic \\.php\$ handler (nginx evaluates regex locations in order).
+        location ~* ^/(storage|uploads)/.*\\.php\$ {
+            deny all;
+            return 403;
+        }
+
         location ~ \\.php\$ {
             fastcgi_pass 127.0.0.1:9000;
             fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
