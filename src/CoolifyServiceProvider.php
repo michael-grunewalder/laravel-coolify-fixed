@@ -129,11 +129,9 @@ class CoolifyServiceProvider extends ServiceProvider
             );
         });
 
-        // Register repository bindings
-        foreach ($this->serviceBindings as $key => $value) {
-            is_numeric($key)
-                ? $this->app->singleton($value)
-                : $this->app->singleton($key, $value);
+        // Register repository bindings (all are interface => implementation)
+        foreach ($this->serviceBindings as $abstract => $concrete) {
+            $this->app->singleton($abstract, $concrete);
         }
     }
 
