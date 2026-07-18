@@ -13,6 +13,11 @@ use Stumason\Coolify\Exceptions\CoolifyNotFoundException;
 class CoolifyClient
 {
     /**
+     * Cache key holding the registry of keys this client has written.
+     */
+    protected const CACHE_REGISTRY = 'coolify:cache-keys';
+
+    /**
      * The base URL of the Coolify API.
      */
     protected string $baseUrl;
@@ -52,6 +57,7 @@ class CoolifyClient
     {
         if ($cached && ($ttl = config('coolify.cache_ttl', 30)) > 0) {
             $cacheKey = $this->cacheKey('get', $endpoint, $query);
+            $this->registerCacheKey($cacheKey);
 
             return Cache::remember($cacheKey, $ttl, function () use ($endpoint, $query) {
                 return $this->request('get', $endpoint, ['query' => $query]);
@@ -71,7 +77,7 @@ class CoolifyClient
      */
     public function post(string $endpoint, array $data = [], ?int $timeout = null): array
     {
-        $this->clearCacheForEndpoint($endpoint);
+        $this->clearCache();
 
         return $this->request('post', $endpoint, ['json' => $data], $timeout);
     }
@@ -86,7 +92,7 @@ class CoolifyClient
      */
     public function put(string $endpoint, array $data = []): array
     {
-        $this->clearCacheForEndpoint($endpoint);
+        $this->clearCache();
 
         return $this->request('put', $endpoint, ['json' => $data]);
     }
@@ -101,7 +107,7 @@ class CoolifyClient
      */
     public function patch(string $endpoint, array $data = []): array
     {
-        $this->clearCacheForEndpoint($endpoint);
+        $this->clearCache();
 
         return $this->request('patch', $endpoint, ['json' => $data]);
     }
@@ -115,7 +121,7 @@ class CoolifyClient
      */
     public function delete(string $endpoint): array
     {
-        $this->clearCacheForEndpoint($endpoint);
+        $this->clearCache();
 
         return $this->request('delete', $endpoint);
     }
@@ -132,7 +138,7 @@ class CoolifyClient
      */
     protected function request(string $method, string $endpoint, array $options = [], ?int $timeout = null): array
     {
-        $response = $this->buildRequest($timeout)
+        $response = $this->buildRequest($timeout, retry: $method === 'get')
             ->{$method}($this->buildUrl($endpoint), $options['json'] ?? $options['query'] ?? []);
 
         return $this->handleResponse($response);
@@ -140,12 +146,19 @@ class CoolifyClient
 
     /**
      * Build the HTTP request with authentication.
+     *
+     * Retries are GET-only: a timed-out POST to a deploy/restart endpoint
+     * may already have been acted on server-side, and retrying it fires
+     * the action again.
      */
-    protected function buildRequest(?int $timeout = null): PendingRequest
+    protected function buildRequest(?int $timeout = null, bool $retry = false): PendingRequest
     {
         $request = Http::acceptJson()
-            ->timeout($timeout ?? config('coolify.timeout', 60))
-            ->retry(3, 100, throw: false);
+            ->timeout($timeout ?? config('coolify.timeout', 60));
+
+        if ($retry) {
+            $request->retry(3, 100, throw: false);
+        }
 
         if ($this->token) {
             $request->withToken($this->token);
@@ -208,25 +221,31 @@ class CoolifyClient
     }
 
     /**
-     * Clear cached responses for an endpoint.
+     * Record a cache key in the registry so clearCache() can forget it
+     * without flushing the host application's cache store.
      */
-    protected function clearCacheForEndpoint(string $endpoint): void
+    protected function registerCacheKey(string $key): void
     {
-        // Extract the resource type from the endpoint (e.g., 'applications' from 'applications/uuid')
-        $parts = explode('/', trim($endpoint, '/'));
-        $resource = $parts[0];
+        $keys = Cache::get(self::CACHE_REGISTRY, []);
 
-        Cache::forget("coolify:{$resource}:list");
+        if (! in_array($key, $keys, true)) {
+            $keys[] = $key;
+            Cache::put(self::CACHE_REGISTRY, $keys, now()->addDay());
+        }
     }
 
     /**
      * Clear all cached Coolify responses.
+     *
+     * Only forgets keys this client wrote (tracked in a registry) — never
+     * the host application's cache. Called before every mutation so the
+     * dashboard can't serve pre-mutation state for the rest of the TTL.
      */
     public function clearCache(): void
     {
-        // This is a simple implementation - in production you might want
-        // to use cache tags if your cache driver supports them
-        Cache::flush();
+        foreach (Cache::pull(self::CACHE_REGISTRY, []) as $key) {
+            Cache::forget($key);
+        }
     }
 
     /**
