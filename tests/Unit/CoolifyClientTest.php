@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Stumason\Coolify\CoolifyClient;
 use Stumason\Coolify\Exceptions\CoolifyApiException;
@@ -136,5 +137,81 @@ describe('CoolifyClient', function () {
         ]);
 
         expect($this->client->testConnection())->toBeFalse();
+    });
+});
+
+describe('CoolifyClient caching', function () {
+    // The suite-wide TestCase disables caching (cache_ttl = 0) — which is
+    // exactly why the invalidation bug shipped. Re-enable it here.
+    beforeEach(function () {
+        config(['coolify.cache_ttl' => 30]);
+        Cache::flush();
+    });
+
+    it('serves cached GETs within the TTL', function () {
+        Http::fake([
+            '*' => Http::response(['data' => ['v1']], 200),
+        ]);
+
+        $this->client->get('applications');
+        $this->client->get('applications');
+
+        Http::assertSentCount(1);
+    });
+
+    it('invalidates cached GETs after a mutation', function () {
+        Http::fake([
+            '*' => Http::response(['data' => []], 200),
+        ]);
+
+        $this->client->get('applications');
+        $this->client->post('applications/abc-123/restart');
+        $this->client->get('applications');
+
+        // GET, POST, then a fresh GET — the cached copy must not survive
+        // the mutation for the rest of the TTL.
+        Http::assertSentCount(3);
+    });
+
+    it('clearCache never touches the host application cache', function () {
+        Http::fake([
+            '*' => Http::response(['data' => []], 200),
+        ]);
+
+        Cache::put('host-app-key', 'precious', 3600);
+        $this->client->get('applications');
+
+        $this->client->clearCache();
+
+        expect(Cache::get('host-app-key'))->toBe('precious');
+    });
+});
+
+describe('CoolifyClient retries', function () {
+    it('retries failed GET requests', function () {
+        Http::fake([
+            '*' => Http::sequence()
+                ->push(['message' => 'Error'], 500)
+                ->push(['message' => 'Error'], 500)
+                ->push(['data' => []], 200),
+        ]);
+
+        $result = $this->client->get('applications', cached: false);
+
+        expect($result)->toBe(['data' => []]);
+        Http::assertSentCount(3);
+    });
+
+    it('never retries mutations', function () {
+        Http::fake([
+            '*' => Http::response(['message' => 'Error'], 500),
+        ]);
+
+        // A timed-out or failed deploy may already have been acted on
+        // server-side — retrying it would fire the deployment again.
+        expect(fn () => $this->client->post('applications/abc-123/deploy'))
+            ->toThrow(CoolifyApiException::class);
+
+        Http::assertSentCount(1);
     });
 });
