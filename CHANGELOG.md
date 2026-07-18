@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.1] - 2026-07-18
+
+### Fixed
+- Cache invalidation actually works: mutations now forget the cached GET responses this package wrote (tracked in a key registry), instead of forgetting a key that was never written — the dashboard no longer serves pre-mutation state for the rest of the TTL after a deploy/restart/env change (#120)
+- `Coolify` cache clearing no longer calls `Cache::flush()` — it never touches the host application's cache store (#120)
+- HTTP retries are now GET-only — a timed-out deploy/restart POST can no longer fire the action multiple times (#120)
+
 ## [3.4.0] - 2026-07-18
 
 ### Added
