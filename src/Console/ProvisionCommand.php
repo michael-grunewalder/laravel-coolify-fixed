@@ -1062,6 +1062,7 @@ class ProvisionCommand extends Command
             'name' => $appName,
             'domains' => "https://{$domain}",
             'instant_deploy' => false,
+            'force_domain_override' => true,
             'health_check_enabled' => true,
             'health_check_path' => '/up',
             'health_check_method' => 'GET',
