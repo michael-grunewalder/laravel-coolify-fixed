@@ -286,9 +286,10 @@ class ProvisionCommand extends Command
                 $environment,
                 $appName,
                 $domain,
-                $deployKey['uuid'],
+                $deployKey,
                 $repoInfo['full_name'],
-                $branch
+                $branch,
+                $githubApp
             );
 
             if (! $appUuid) {
@@ -364,45 +365,44 @@ class ProvisionCommand extends Command
             $this->line('  <fg=gray>Database credentials set on Coolify application</>');
 
             // ─────────────────────────────────────────────────────────────────
-            // DEPLOY KEY SETUP (with confirmation)
+            // DEPLOY KEY SETUP (only when not using GitHub App)
             // ─────────────────────────────────────────────────────────────────
-            $this->newLine();
-            $this->line('  <fg=yellow;options=bold>╔══════════════════════════════════════════════════════════════╗</>');
-            $this->line('  <fg=yellow;options=bold>║  REQUIRED: Add Deploy Key to GitHub                         ║</>');
-            $this->line('  <fg=yellow;options=bold>╚══════════════════════════════════════════════════════════════╝</>');
-            $this->newLine();
-
-            // Fetch and display the public key
-            $publicKey = $deployKey['public_key'] ?? null;
-            if ($publicKey) {
-                $this->line('  <fg=white>Option A: Via GitHub UI</>');
-                $this->line('  <fg=gray>────────────────────────</>');
-                $this->line('  <fg=white>1.</> Go to: <fg=cyan;options=underscore>https://github.com/'.$repoInfo['full_name'].'/settings/keys</>');
-                $this->line('  <fg=white>2.</> Click "<fg=green>Add deploy key</>"');
-                $this->line('  <fg=white>3.</> Title: <fg=gray>'.$appName.'-deploy-key</>');
-                $this->line('  <fg=white>4.</> Paste this public key:');
+            if (! $githubApp) {
                 $this->newLine();
-                $this->line("  <fg=white;bg=gray> {$publicKey} </>");
+                $this->line('  <fg=yellow;options=bold>╔══════════════════════════════════════════════════════════════╗</>');
+                $this->line('  <fg=yellow;options=bold>║  REQUIRED: Add Deploy Key to GitHub                         ║</>');
+                $this->line('  <fg=yellow;options=bold>╚══════════════════════════════════════════════════════════════╝</>');
                 $this->newLine();
 
-                // CLI option for power users
-                $escapedKey = addslashes(trim($publicKey));
-                $this->line('  <fg=white>Option B: Via CLI (recommended)</>');
-                $this->line('  <fg=gray>──────────────────────────────────</>');
-                $this->line("  <fg=cyan>gh api repos/{$repoInfo['full_name']}/keys --method POST</> \\");
-                $this->line("    <fg=cyan>-f title=\"{$appName}-deploy-key\"</> \\");
-                $this->line("    <fg=cyan>-f key=\"{$escapedKey}\"</> \\");
-                $this->line('    <fg=cyan>-F read_only=true</>');
-                $this->newLine();
-            } else {
-                $this->line("  <fg=white>Go to:</> https://github.com/{$repoInfo['full_name']}/settings/keys");
-                $this->line('  <fg=gray>Add the public key from Coolify (Security -> Private Keys)</>');
-                $this->newLine();
-            }
+                $publicKey = $deployKey['public_key'] ?? null;
+                if ($publicKey) {
+                    $this->line('  <fg=white>Option A: Via GitHub UI</>');
+                    $this->line('  <fg=gray>────────────────────────</>');
+                    $this->line('  <fg=white>1.</> Go to: <fg=cyan;options=underscore>https://github.com/'.$repoInfo['full_name'].'/settings/keys</>');
+                    $this->line('  <fg=white>2.</> Click "<fg=green>Add deploy key</>"');
+                    $this->line('  <fg=white>3.</> Title: <fg=gray>'.$appName.'-deploy-key</>');
+                    $this->line('  <fg=white>4.</> Paste this public key:');
+                    $this->newLine();
+                    $this->line("  <fg=white;bg=gray> {$publicKey} </>");
+                    $this->newLine();
 
-            // Wait for user to confirm they've added the deploy key
-            if (! $this->option('no-interaction')) {
-                pause('Press ENTER once you have added the deploy key to GitHub...');
+                    $escapedKey = addslashes(trim($publicKey));
+                    $this->line('  <fg=white>Option B: Via CLI (recommended)</>');
+                    $this->line('  <fg=gray>──────────────────────────────────</>');
+                    $this->line("  <fg=cyan>gh api repos/{$repoInfo['full_name']}/keys --method POST</> \\");
+                    $this->line("    <fg=cyan>-f title=\"{$appName}-deploy-key\"</> \\");
+                    $this->line("    <fg=cyan>-f key=\"{$escapedKey}\"</> \\");
+                    $this->line('    <fg=cyan>-F read_only=true</>');
+                    $this->newLine();
+                } else {
+                    $this->line("  <fg=white>Go to:</> https://github.com/{$repoInfo['full_name']}/settings/keys");
+                    $this->line('  <fg=gray>Add the public key from Coolify (Security -> Private Keys)</>');
+                    $this->newLine();
+                }
+
+                if (! $this->option('no-interaction')) {
+                    pause('Press ENTER once you have added the deploy key to GitHub...');
+                }
             }
 
             // ─────────────────────────────────────────────────────────────────
@@ -891,7 +891,7 @@ class ProvisionCommand extends Command
         string $environment,
         string $appName
     ): ?string {
-        $dbName = Str::snake(Str::lower($appName));
+        $dbName = str_replace('-', '_', Str::lower($appName));
 
         $result = spin(
             callback: fn () => $databases->createPostgres([
@@ -1030,9 +1030,10 @@ class ProvisionCommand extends Command
     }
 
     /**
-     * Create application using deploy key for SSH-based private repo access.
+     * Create application on Coolify.
      *
-     * Deploy keys don't hit GitHub API rate limits (unlike GitHub Apps).
+     * Uses GitHub App authentication when available (avoids deploy key verification issues).
+     * Falls back to deploy key with automatic key setup via GitHub CLI.
      */
     protected function createApplication(
         ApplicationRepository $applications,
@@ -1041,22 +1042,19 @@ class ProvisionCommand extends Command
         string $environment,
         string $appName,
         string $domain,
-        string $deployKeyUuid,
+        array $deployKey,
         string $gitRepository,
-        string $branch
+        string $branch,
+        ?array $githubApp = null
     ): ?string {
         $this->line("    Repository: <fg=white>{$gitRepository}:{$branch}</>");
         $this->line("    Name: <fg=white>{$appName}</>");
         $this->line("    Domain: <fg=white>https://{$domain}</>");
 
-        // Use deploy key endpoint - creates app with SSH access (no GitHub API calls)
-        $this->line('    Creating application with deploy key...');
-
         $payload = [
             'server_uuid' => $serverUuid,
             'project_uuid' => $projectUuid,
             'environment_name' => $environment,
-            'private_key_uuid' => $deployKeyUuid,
             'git_repository' => "git@github.com:{$gitRepository}.git",
             'git_branch' => $branch,
             'build_pack' => 'dockerfile',
@@ -1064,7 +1062,6 @@ class ProvisionCommand extends Command
             'name' => $appName,
             'domains' => "https://{$domain}",
             'instant_deploy' => false,
-            // Health check config - Laravel 11+ has /up by default
             'health_check_enabled' => true,
             'health_check_path' => '/up',
             'health_check_method' => 'GET',
@@ -1072,10 +1069,44 @@ class ProvisionCommand extends Command
         ];
 
         try {
-            $result = spin(
-                callback: fn () => $applications->createPrivateDeployKey($payload),
-                message: '    Calling Coolify API...'
-            );
+            if ($githubApp) {
+                $this->line('    Creating application via GitHub App...');
+                $payload['github_app_uuid'] = $githubApp['uuid'];
+                $result = spin(
+                    callback: fn () => $applications->createPrivateGithubApp($payload),
+                    message: '    Calling Coolify API...'
+                );
+            } else {
+                $this->line('    Creating application with deploy key...');
+
+                $this->newLine();
+                $this->line('    <fg=yellow>╔════════════════════════════════════════════════════╗</>');
+                $this->line('    <fg=yellow>║  Add the deploy key to GitHub first!               ║</>');
+                $this->line('    <fg=yellow>╚════════════════════════════════════════════════════╝</>');
+                $this->newLine();
+
+                $publicKey = $deployKey['public_key'] ?? null;
+                if ($publicKey) {
+                    $this->line('    Public key:');
+                    $this->line("    <fg=white;bg=gray> {$publicKey} </>");
+                    $this->newLine();
+
+                    $escapedKey = addslashes(trim($publicKey));
+                    $this->line('    Via CLI:');
+                    $this->line("    <fg=cyan>gh api repos/{$gitRepository}/keys --method POST</> \\");
+                    $this->line("      <fg=cyan>-f title=\"{$appName}-deploy-key\"</> \\");
+                    $this->line("      <fg=cyan>-f key=\"{$escapedKey}\"</> \\");
+                    $this->line('      <fg=cyan>-F read_only=true</>');
+                    $this->newLine();
+                }
+
+                $result = spin(
+                    callback: fn () => $applications->createPrivateDeployKey(array_merge($payload, [
+                        'private_key_uuid' => $deployKey['uuid'],
+                    ])),
+                    message: '    Calling Coolify API...'
+                );
+            }
 
             $uuid = $result['uuid'] ?? null;
 
@@ -1086,7 +1117,6 @@ class ProvisionCommand extends Command
             $this->createdResources['Application'] = $uuid;
             $this->line("    <fg=green>Application created:</> {$uuid}");
 
-            // Generate and set webhook secret for GitHub manual webhooks
             $this->webhookSecret = bin2hex(random_bytes(32));
             spin(
                 callback: fn () => $applications->update($uuid, [
