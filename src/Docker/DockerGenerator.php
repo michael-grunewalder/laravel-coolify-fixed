@@ -205,6 +205,9 @@ COPY composer.json composer.lock ./
 # Generate optimized autoloader
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 
+# Publish Livewire assets to avoid 404 with cached routes
+RUN php artisan vendor:publish --tag=livewire:assets --ansi 2>/dev/null || true
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \\
     && chmod -R 775 storage bootstrap/cache
@@ -331,6 +334,9 @@ COPY composer.json composer.lock ./
 
 # Generate optimized autoloader
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
+
+# Publish Livewire assets to avoid 404 with cached routes
+RUN php artisan vendor:publish --tag=livewire:assets --ansi 2>/dev/null || true
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \\
@@ -699,6 +705,7 @@ STEP=$((STEP + 1))
 # ===========================================
 echo ""
 echo "[$STEP/$TOTAL_STEPS] Optimizing application..."
+php artisan vendor:publish --tag=livewire:assets --ansi 2>/dev/null || true
 php artisan optimize
 echo "       Optimization completed (config, routes, views, events cached)."
 STEP=$((STEP + 1))
