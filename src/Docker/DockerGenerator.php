@@ -200,7 +200,7 @@ COPY routes ./routes
 COPY storage ./storage
 
 # Save a copy of storage so volume mounts can be restored at runtime
-RUN cp -a storage /var/www/html/storage-init 
+RUN cp -a storage /var/www/html/storage-init \
     && chown -R www-data:www-data /var/www/html/storage-init
 COPY resources/views ./resources/views
 COPY app ./app
@@ -213,11 +213,11 @@ RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 RUN php artisan vendor:publish --tag=livewire:assets --ansi 2>/dev/null || true
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \\
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 # Entrypoint configuration
-ENV AUTO_MIGRATE={$autoMigrate} \\
+ENV AUTO_MIGRATE={$autoMigrate} \
     DB_WAIT_TIMEOUT={$dbWaitTimeout}
 
 # Entrypoint script (runs migrations + optimize on startup)
@@ -225,7 +225,7 @@ COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 {$browsershotEnv}
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \\
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8080{$healthCheckPath} || exit 1
 
 EXPOSE 8080
@@ -334,7 +334,7 @@ COPY routes ./routes
 COPY storage ./storage
 
 # Save a copy of storage so volume mounts can be restored at runtime
-RUN cp -a storage /var/www/html/storage-init 
+RUN cp -a storage /var/www/html/storage-init \
     && chown -R www-data:www-data /var/www/html/storage-init
 COPY resources/views ./resources/views
 COPY app ./app

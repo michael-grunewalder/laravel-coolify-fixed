@@ -1072,7 +1072,7 @@ class ProvisionCommand extends Command
         $this->line('    Adding deploy key to GitHub...');
         $publicKey = $deployKey['public_key'] ?? null;
         if ($publicKey) {
-            $escapedKey = addslashes(trim($publicKey));
+            $escapedKey = trim($publicKey);
             $ghResult = Process::run(sprintf(
                 'gh api repos/%s/keys --method POST -f title="%s-deploy-key" -f key=%s -F read_only=true 2>/dev/null',
                 escapeshellarg($gitRepository),
