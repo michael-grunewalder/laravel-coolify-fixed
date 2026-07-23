@@ -200,7 +200,7 @@ COPY routes ./routes
 COPY storage ./storage
 
 # Save a copy of storage so volume mounts can be restored at runtime
-RUN cp -a storage /var/www/html/storage-init 
+RUN cp -a storage /var/www/html/storage-init \
     && chown -R www-data:www-data /var/www/html/storage-init
 COPY resources/views ./resources/views
 COPY app ./app
@@ -331,7 +331,7 @@ COPY routes ./routes
 COPY storage ./storage
 
 # Save a copy of storage so volume mounts can be restored at runtime
-RUN cp -a storage /var/www/html/storage-init 
+RUN cp -a storage /var/www/html/storage-init \
     && chown -R www-data:www-data /var/www/html/storage-init
 COPY resources/views ./resources/views
 COPY app ./app
